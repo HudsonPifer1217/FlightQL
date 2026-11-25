@@ -23,3 +23,16 @@ def test_ask_rejects_empty_question(settings, con):
     app = create_app(FlightQLAgent(FakeLLM([]), settings, con=con))
     with TestClient(app) as client:
         assert client.post("/ask", json={"question": ""}).status_code == 422
+
+
+def test_schema_mode_override_does_not_touch_shared_settings(settings, con):
+    llm = FakeLLM([resp("SELECT COUNT(*) AS n FROM flights", [])] * 2)
+    agent = FlightQLAgent(llm, settings, con=con)
+    before = agent.settings.schema_mode
+    app = create_app(agent)
+    with TestClient(app) as client:
+        body = client.post("/ask", json={"question": "How many flights?",
+                                         "schema_mode": "full"}).json()
+    assert body["status"] == "answered"
+    assert set(body["schema_shown"]) == set(agent.catalog.tables)  # full schema was used
+    assert agent.settings.schema_mode == before                    # and nothing was mutated

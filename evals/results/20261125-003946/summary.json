@@ -43,11 +43,11 @@
   },
   "claude-opus-5-5:retrieved:nodict": {
     "execution_accuracy": [
-      0.8461538461538461,
+      0.9230769230769231,
       0.0
     ],
     "first_try_accuracy": [
-      0.8461538461538461,
+      0.9230769230769231,
       0.0
     ],
     "valid_first_try": [

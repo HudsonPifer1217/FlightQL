@@ -35,9 +35,9 @@ That `COALESCE` is the interesting part. Without the project's data dictionary, 
 
 - **49 benchmark questions** (34 standard + 15 adversarially hard), **222 scored runs** against the real 37.8M-row database, every failure reviewed by hand.
 - **100% execution accuracy** on both tiers for Claude Opus 5.5 and Claude Haiku 5.5 when given the data dictionary. **All 10 unanswerable and prompt-injection questions** were refused in every run, and the `flights` table was verified unchanged after every run.
-- **The data dictionary is the accuracy lever:** removing it dropped Haiku to 92% on the hard tier (the same error in 3/3 runs).
+- **The data dictionary is the accuracy lever:** removing it dropped Haiku to 87% on the hard tier (one error in 3/3 runs, another in 2/3).
 - **Haiku matched Opus at ~1/30th the cost** ($0.0004 vs $0.0128 per question).
-- **Guardrails had zero false blocks** across all 222 runs. 101 unit tests (validator, sandbox, retry loop, API, gold SQL) run in CI with a mocked LLM.
+- **Guardrails had zero false blocks** across all 222 runs. 105 unit tests (validator, sandbox, retry loop, API, scorer, gold SQL) run in CI with a mocked LLM.
 
 ## How it works
 
@@ -99,11 +99,11 @@ Two hand-written question sets, each with gold SQL checked against the real data
 | Setup | Accuracy (13 exact) | Refusals (2) | Cost / question |
 |---|---|---|---|
 | Haiku 5.5 + dictionary (3 runs) | **100% ± 0%** | 2/2 | $0.0006 |
-| Haiku 5.5, no dictionary (3 runs) | **92% ± 0%** (h10 wrong in 3/3) | 2/2 | $0.0006 |
+| Haiku 5.5, no dictionary (3 runs) | **87% ± 4%** (h10 wrong in 3/3, h09 in 2/3) | 2/2 | $0.0006 |
 | Opus 5.5 + dictionary (1 run) | **100%** | 2/2 | $0.0155 |
-| Opus 5.5, no dictionary (1 run) | 85% as auto-scored, 100% after review* | 2/2 | $0.0151 |
+| Opus 5.5, no dictionary (1 run) | 92% as auto-scored, 100% after review* | 2/2 | $0.0151 |
 
-\*Both auto-scored Opus failures were grader false negatives, not model errors: the right number inside a 3-row ROLLUP breakdown, and the hour written as the time block `'2000-2059'`. See below.
+\*Both Opus failures in the original run were grader false negatives, not model errors: the right number inside a 3-row ROLLUP breakdown, and the hour written as the time block `'2000-2059'`. The second is now an accepted answer; the first stays strict. See below.
 
 Raw per-question records (SQL, result rows, attempts, cost) are in `evals/results/`.
 
@@ -119,7 +119,8 @@ Raw per-question records (SQL, result rows, attempts, cost) are in `evals/result
 1. **Stale grounding.** The first live run, on a one-month dev database, said "across the full Jan 2020 – Nov 2025 period" because that range was hardcoded in the table description. **Fix:** the date range and row count are now read from the data when the catalog loads, applying the same principle as the schema check.
 2. **NULL semantics (the real model failure).** Without the dictionary, Haiku answered the weather-delay question with `AVG(weather_delay)` = 3.61, in all 3 runs. The column is NULL unless a flight was 15+ minutes late, so this averages only late flights. With the dictionary note, the same model wrote `COALESCE(weather_delay, 0)` = 0.74 and explained why. **Fix:** this is why the dictionary exists. The ablation keeps measuring it.
 3. **The grader was wrong, twice.** Two auto-scored "failures" were correct answers in an unexpected shape. One (hour vs. time block) is now an accepted alternative answer. The other (a ROLLUP breakdown when one number was asked for) stays strict and is reported instead of loosening the grader. **Lesson:** automatic grading needs human review of every failure before a number is published.
-4. **A tie in the gold answer.** For "top 5 routes by cancellation rate", ranks 4 and 5 tie at 8.29%, so a correct answer could fail on order alone. **Fix:** found by checking every top-N gold answer for ties before running. That question is now scored as a set (rank 6 is a clear 8.02%).
+4. **The grader was too lenient, too.** A code review found the scorer gave every number a flat ±0.06 tolerance, so any two small rates matched (1.8% "equalled" 4.5%), and counts were allowed to be 1% off. **Fix:** counts must match exactly, and rounding is accepted only to the precision the model actually rounded to. Re-scoring every saved run (`evals/rescore.py`, no API calls) flipped two verdicts: Haiku without the dictionary had counted 139 flights that left the gate and were later cancelled as "departed late" (h09). That also revealed the dictionary itself was wrong: it claimed `dep_delay` is NULL for every cancelled flight, but 18,078 have one. The note is corrected.
+5. **A tie in the gold answer.** For "top 5 routes by cancellation rate", ranks 4 and 5 tie at 8.29%, so a correct answer could fail on order alone. **Fix:** found by checking every top-N gold answer for ties before running. That question is now scored as a set (rank 6 is a clear 8.02%).
 
 Design decisions and the full run log are in [`DECISIONS.md`](DECISIONS.md).
 

@@ -83,10 +83,13 @@ class FlightQLAgent:
         self.settings.log_dir.mkdir(parents=True, exist_ok=True)
         self.log_path: Path = self.settings.log_dir / "flightql.jsonl"
 
-    def ask(self, question: str) -> AgentResult:
+    def ask(self, question: str, schema_mode: str | None = None) -> AgentResult:
+        """Answer one question. `schema_mode` overrides settings for this call only,
+        so concurrent callers sharing one agent never see each other's mode."""
         s = self.settings
+        mode = schema_mode or s.schema_mode
         t0 = time.perf_counter()
-        schema_text, shown = build_context(question, self.catalog, s.schema_mode,
+        schema_text, shown = build_context(question, self.catalog, mode,
                                            docs=s.data_dictionary)
         attempts: list[Attempt] = []
         result: AgentResult | None = None
@@ -169,17 +172,17 @@ class FlightQLAgent:
         result.latency_s = round(time.perf_counter() - t0, 3)
         result.input_tokens, result.output_tokens = spent["in"], spent["out"]
         result.cost_usd = round(spent["cost"], 6)
-        self._log(result)
+        self._log(result, mode)
         return result
 
     @staticmethod
     def _refusal(question: str, reason: str) -> AgentResult:
         return AgentResult(question=question, status="refused", answer=reason)
 
-    def _log(self, r: AgentResult) -> None:
+    def _log(self, r: AgentResult, schema_mode: str) -> None:
         record = {
             "ts": dt.datetime.now(dt.timezone.utc).isoformat(),
-            "schema_mode": self.settings.schema_mode,
+            "schema_mode": schema_mode,
             **r.model_dump(exclude={"rows"}),
             "n_rows": len(r.rows),
         }

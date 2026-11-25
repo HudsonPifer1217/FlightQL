@@ -57,3 +57,24 @@ def test_scorer_ordered_top_n():
 def test_scorer_match_subset_of_columns():
     gold = [("A", 10), ("B", 20)]
     assert results_match(gold, [["carrier", 10], ["weather", 20]], match=[1])
+
+
+def test_scorer_rejects_wrong_small_rates():
+    # Regression: a flat 0.06 absolute tolerance used to make any two small
+    # fractions "equal", and the x0.01 rescale let 6.0 match 0.018.
+    assert not results_match([(0.018,)], [[0.045]])
+    assert not results_match([(0.018,)], [[6.0]])
+    assert not results_match([(0.018,)], [[0.0]])     # rounded away entirely
+    assert results_match([(0.018,)], [[0.02]])        # ROUND(x, 2) still fine
+    assert results_match([(0.018,)], [[1.8]])         # as a percentage
+
+
+def test_scorer_rounding_tolerance_follows_predicted_precision():
+    assert results_match([(12.3456,)], [[12.3]])      # ROUND(x, 1)
+    assert results_match([(12.3456,)], [[12]])        # int vs float: within 1%
+    assert not results_match([(12.3456,)], [[12.21]])  # >1% off, not a rounding of gold
+
+
+def test_scorer_counts_are_exact():
+    assert results_match([(1_438_465,)], [[1_438_465]])
+    assert not results_match([(1_438_465,)], [[1_440_000]])  # within 1%, still wrong

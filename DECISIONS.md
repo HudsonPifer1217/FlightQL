@@ -51,9 +51,9 @@ Running log of design choices and why. Newest at the bottom.
 | Setup | Hard-tier accuracy (13 exact) | Refusals (2) |
 |---|---|---|
 | Haiku + dictionary (3 runs) | 100% ± 0% | 100% |
-| Haiku, no dictionary (3 runs) | 92% ± 0% (h10 failed 3/3) | 100% |
+| Haiku, no dictionary (3 runs) | 87% ± 4% (h10 failed 3/3, h09 2/3) | 100% |
 | Opus + dictionary (1 run) | 100% | 100% |
-| Opus, no dictionary (1 run) | 85% as scored; **100% after manual review** | 100% |
+| Opus, no dictionary (1 run) | 92% as scored; **100% after manual review** | 100% |
 
 **Manual review of every failure.** I read all 5 failing answers.
 - h10 (Haiku, no dictionary) is a real error, repeated in all 3 runs. `AVG(weather_delay)` returned 3.61 min instead of 0.74, because without the dictionary note the model didn't know the column is NULL for on-time flights. With the dictionary, the same model wrote `COALESCE(weather_delay, 0)` and explained why. **This is the clearest evidence that the data dictionary changes answers, not just style.**
@@ -64,3 +64,15 @@ Running log of design choices and why. Newest at the bottom.
 - Across all 222 question-runs (102 standard + 120 hard) so far, no first attempt referenced a nonexistent table or column, and no question needed a retry. On this schema, current Claude models don't hallucinate columns, so the validator and retry loop are a safety net (they're proven by unit tests and by adversarial cases), not an accuracy booster. An honest claim is "guardrails with zero false blocks across 222 real runs", not "retries raised accuracy".
 - The accuracy lever that measurably mattered was the data dictionary (semantic grounding), not schema grounding.
 - Automatic grading had 2 false negatives in 5 failures, so failures need human review before they're reported.
+
+## Scorer tightened after review (2026-11-25)
+
+The original scorer allowed |a - b| <= max(1%, 0.06) for every number, which made any
+two small fractions equal, and compared counts with the same 1% slack. Counts are now
+exact; other numbers pass within 1% relative or when they equal gold rounded to the
+predicted precision (bounded so rounding can't erase a small rate). All saved runs were
+re-scored offline with `evals/rescore.py`. Changes: h09 (Haiku, no dictionary) failed in
+2 of 3 runs, because it counted 139 flights cancelled after leaving the gate; h13
+(Opus, no dictionary) now passes because its alt_gold was added after that run. The
+`dep_time` / `dep_delay` dictionary notes wrongly said "NULL if cancelled" (18,078
+cancelled flights have a departure delay) and were corrected.

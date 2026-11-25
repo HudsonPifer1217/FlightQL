@@ -56,15 +56,7 @@ def create_app(agent: FlightQLAgent | None = None) -> FastAPI:
     # DuckDB calls don't stall the event loop.
     @app.post("/ask", response_model=AgentResult)
     def ask(req: AskRequest):
-        agent = get_agent()
-        if req.schema_mode is None:
-            return agent.ask(req.question)
-        original = agent.settings.schema_mode
-        agent.settings.schema_mode = req.schema_mode
-        try:
-            return agent.ask(req.question)
-        finally:
-            agent.settings.schema_mode = original
+        return get_agent().ask(req.question, schema_mode=req.schema_mode)
 
     return app
 

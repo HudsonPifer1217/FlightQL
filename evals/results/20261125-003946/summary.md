@@ -1,7 +1,7 @@
 | Metric | `claude-opus-5-5:retrieved` | `claude-opus-5-5:retrieved:nodict` |
 |---|---|---|
-| Execution accuracy (simple/aggregate/join) | 100% ± 0% | 85% ± 0% |
-| ...without retries (first attempt only) | 100% ± 0% | 85% ± 0% |
+| Execution accuracy (simple/aggregate/join) | 100% ± 0% | 92% ± 0% |
+| ...without retries (first attempt only) | 100% ± 0% | 92% ± 0% |
 | Valid SQL on first try | 100% ± 0% | 100% ± 0% |
 | Hallucinated schema rate (first attempts) | 0% ± 0% | 0% ± 0% |
 | Ambiguous: answered with stated assumptions | – | – |

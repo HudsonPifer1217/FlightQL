@@ -7,12 +7,18 @@ A predicted result matches a gold result when:
   * row counts are equal (or, for ordered top-N questions, the first k predicted
     rows match the k gold rows), and
   * every gold column (or those listed in `match`) has a predicted column with the
-    same values: numbers within 1% (or 0.06 absolute, to allow ROUND(x, 1)),
-    fractions also accepted as percentages (x100), text compared case-insensitively.
+    same values, text compared case-insensitively, and numbers compared as:
+      - integers (counts) exactly;
+      - other numbers within 1% relative, or equal to the gold value rounded to
+        the predicted value's precision (so ROUND(x, 2) passes). Rounding is only
+        excused when it keeps the value within 30% of gold, so a 1.8% rate
+        returned as 0.0 or 0.045 still fails;
+      - fractions also accepted as percentages (x100) and vice versa.
 """
 from __future__ import annotations
 
 import datetime as dt
+from decimal import Decimal
 from typing import Any
 
 
@@ -21,22 +27,48 @@ def _norm(v: Any) -> Any:
         return None
     if isinstance(v, bool):
         return int(v)
-    if isinstance(v, (int, float)):
-        return float(v)
+    if isinstance(v, int):
+        return v
+    if isinstance(v, float):
+        return v
     if isinstance(v, (dt.date, dt.datetime)):
         return v.isoformat()[:10]
+    if isinstance(v, Decimal):  # integral DECIMAL(n, 0) is a count; scaled ones are not
+        return int(v) if v.as_tuple().exponent >= 0 else float(v)
     try:
-        return float(v)  # Decimal, numeric strings
+        return float(v)  # numeric strings
     except (TypeError, ValueError):
         return str(v).strip().lower()
 
 
-def _eq(a: Any, b: Any) -> bool:
-    if a is None or b is None:
-        return a is None and b is None
-    if isinstance(a, float) and isinstance(b, float):
-        return abs(a - b) <= max(0.01 * abs(a), 0.06)
-    return a == b
+def _decimals(x: float) -> int | None:
+    """Number of decimal places x appears to be rounded to (None if more than 6)."""
+    for d in range(7):
+        if abs(round(x, d) - x) <= 1e-9 * max(1.0, abs(x)):
+            return d
+    return None
+
+
+def _num_eq(gold: float, pred: float) -> bool:
+    diff = abs(gold - pred)
+    if diff <= 0.01 * abs(gold) + 1e-12:
+        return True
+    d = _decimals(pred)
+    if d is None:
+        return False
+    half_unit = 0.5 * 10 ** -d
+    return diff <= half_unit + 1e-9 and half_unit <= 0.3 * abs(gold)
+
+
+def _eq(gold: Any, pred: Any) -> bool:
+    if gold is None or pred is None:
+        return gold is None and pred is None
+    num = (int, float)
+    if isinstance(gold, int) and isinstance(pred, int):
+        return gold == pred
+    if isinstance(gold, num) and isinstance(pred, num):
+        return _num_eq(float(gold), float(pred))
+    return gold == pred
 
 
 def _sort_key(v: Any):
@@ -57,7 +89,7 @@ def _column_matches(gold: list, pred: list, ordered: bool) -> bool:
         if all(_eq(a, b) for a, b in zip(g, p)):
             return True
         if not any(isinstance(x, float) for x in pred):
-            break
+            break  # integers and text are never rescaled
     return False
 
 

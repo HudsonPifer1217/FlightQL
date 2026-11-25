@@ -40,8 +40,11 @@ COLUMN_DOCS = {
         "dest_state": "Destination state, two-letter code.",
         "sched_dep_time": "Scheduled departure, local time as HHMM integer (e.g. 1730 = 5:30 PM). "
                           "Hour = sched_dep_time // 100.",
-        "dep_time": "Actual departure, local HHMM integer. NULL if cancelled.",
-        "dep_delay": "Departure delay in minutes; negative = left early. NULL if cancelled.",
+        "dep_time": "Actual departure, local HHMM integer. NULL if the flight never left "
+                    "the gate; flights cancelled after leaving keep it.",
+        "dep_delay": "Departure delay in minutes; negative = left early. NULL if the flight "
+                     "never left the gate; flights cancelled after leaving keep it, so filter "
+                     "NOT cancelled when counting flights that departed.",
         "dep_delayed_15": "True if departure delay >= 15 minutes.",
         "dep_time_block": "Scheduled departure hour block, e.g. '0600-0659'.",
         "taxi_out": "Taxi-out minutes (gate to wheels-off). Proxy for airport congestion.",
