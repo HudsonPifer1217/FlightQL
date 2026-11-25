@@ -1,0 +1,18 @@
+# Keep secrets, data, and dev files out of the image.
+.env
+.git
+.github
+.venv
+.pytest_cache
+.vscode
+.idea
+.DS_Store
+**/__pycache__
+*.egg-info
+data
+logs
+evals
+tests
+docs
+scripts
+Project Plan*.md

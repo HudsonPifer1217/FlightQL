@@ -63,7 +63,7 @@ Full methodology, tables, and failure write-ups: **[docs/EVALUATION.md](docs/EVA
 
 ## Built with
 
-Python · Claude API (structured outputs) · DuckDB · sqlglot (SQL parsing and validation) · FastAPI · Pydantic · pytest + GitHub Actions (105 tests, no API key needed)
+Python · Claude API (structured outputs) · DuckDB · sqlglot (SQL parsing and validation) · FastAPI · Pydantic · Docker · pytest + GitHub Actions (105 tests, no API key needed)
 
 Developed with [Claude Code](https://claude.com/claude-code) as an AI pair programmer, which is why Claude appears as a co-author on commits.
 
@@ -77,6 +77,13 @@ python -m flightql "Which airline had the most flights in 2023?"
 ```
 
 To use it as a web API, run `uvicorn flightql.api:app`, then open `http://localhost:8000/docs`.
+
+To run the API in Docker instead (after building the database):
+
+```bash
+docker build -t flightql .
+docker run -p 8000:8000 --env-file .env -v "$(pwd)/data:/app/data" flightql
+```
 
 To run the tests, run `pytest`. They use a small fake database and a fake model, so there's no download and no cost.
 

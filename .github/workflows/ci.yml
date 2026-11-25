@@ -22,3 +22,12 @@ jobs:
       # no API key, no cost.
       - name: Test
         run: pytest -v
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t flightql .
+      - name: Smoke test (imports the app and its dependencies inside the image)
+        run: docker run --rm flightql python -c "import flightql.api; print('ok')"
