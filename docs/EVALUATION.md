@@ -65,7 +65,7 @@ Raw per-question records (SQL, result rows, attempts, cost) are in `evals/result
 
 ## Data
 
-[BTS Airline On-Time Performance](https://www.transtats.bts.gov/), Jan 2020 – Nov 2025, all reporting carriers: 37,759,151 scheduled flights including cancellations and diversions (my earlier 36.3M-flight delay analysis excluded them).
+[BTS Airline On-Time Performance](https://www.transtats.bts.gov/), Jan 2020 – Nov 2025, all reporting carriers: 37,759,151 scheduled flights including cancellations and diversions (my earlier [36.3M-flight delay analysis](https://github.com/HudsonPifer1217/flight-delay-analysis) excluded them).
 
 | Table | Rows | What |
 |---|---|---|

@@ -22,6 +22,8 @@ FlightQL is a question-answering tool over **37.8 million U.S. domestic flights*
 
 I wanted to build a version that guards against all three, and then **measure** how much it can be trusted instead of just claiming it works.
 
+This is a follow-up to my [U.S. flight delay analysis](https://github.com/HudsonPifer1217/flight-delay-analysis), a statistical study of what causes delays across 36.3 million flights. That project answered the questions I chose. FlightQL lets anyone ask their own questions of the same BTS data.
+
 ## How it works
 
 ```
@@ -55,11 +57,15 @@ I wrote 49 test questions with known correct answers. Fifteen of them were desig
 - **The small model was enough.** Haiku matched Opus at about 1/30th of the cost ($0.0004 vs $0.0128 per question).
 - **Testing caught my own mistakes**, including a grader that was too lenient and an error in my data dictionary. Both were fixed and all results re-scored.
 
+These are 49 hand-written questions, which is a small test. A perfect score shows that these kinds of questions work reliably, not that every possible question will.
+
 Full methodology, tables, and failure write-ups: **[docs/EVALUATION.md](docs/EVALUATION.md)**. Design decisions: [DECISIONS.md](DECISIONS.md).
 
 ## Built with
 
 Python · Claude API (structured outputs) · DuckDB · sqlglot (SQL parsing and validation) · FastAPI · Pydantic · pytest + GitHub Actions (105 tests, no API key needed)
+
+Developed with [Claude Code](https://claude.com/claude-code) as an AI pair programmer, which is why Claude appears as a co-author on commits.
 
 ## Run it
 

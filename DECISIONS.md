@@ -4,9 +4,9 @@ Running log of design choices and why. Newest at the bottom.
 
 ## 2026-11-24: Initial build
 
-**Rebuilt the dataset from BTS instead of reusing the old Parquet.** The 36M-row Parquet from the flight-delay-analysis project was gitignored and no longer on disk. `scripts/build_db.py` re-downloads Jan 2020 – Nov 2025 and is resumable (`_load_log` table), so it's reproducible for anyone cloning the repo.
+**Rebuilt the dataset from BTS instead of reusing the old Parquet.** The 36M-row Parquet from the [flight-delay-analysis](https://github.com/HudsonPifer1217/flight-delay-analysis) project was gitignored and no longer on disk. `scripts/build_db.py` re-downloads Jan 2020 – Nov 2025 and is resumable (`_load_log` table), so it's reproducible for anyone cloning the repo.
 
-**Kept cancelled and diverted flights.** The original analysis dropped them (it studied delays). For a question-answering system that makes "cancellation rate" questions unanswerable, so they're kept as boolean flags. Delay columns are NULL for them, and the data dictionary says so.
+**Kept cancelled and diverted flights.** The original analysis dropped them (it studied delays). For a question-answering system that makes "cancellation rate" questions unanswerable, so they're kept as boolean flags. Delay columns are NULL for them, and the data dictionary says so. *(Partly superseded: flights cancelled after leaving the gate do keep `dep_time`/`dep_delay`. See "Scorer tightened after review" below.)*
 
 **Renamed BTS columns to snake_case and wrote a data dictionary.** Names like `CRSDepTime` or `DepDel15` invite wrong guesses. The dictionary tells the model that times are HHMM integers, that delay-cause columns are only populated when `arr_delay >= 15`, and that `day_of_week` 1 = Monday. Cheap, and it removes a whole class of plausible-but-wrong SQL.
 
@@ -22,7 +22,7 @@ Running log of design choices and why. Newest at the bottom.
 
 **Models.** Claude Opus 5.5 is the default, and Claude Haiku 5.5 is the small/fast comparison. Opus requests opt into server-side refusal fallbacks. Pricing in `config.py` is used for per-question cost.
 
-**Eval scoring compares result sets with tolerance.** Exact SQL matching would penalize equivalent queries. Results match when every gold column has a predicted column with the same values (1% / 0.06 tolerance, fraction-or-percent accepted). Top-N questions also compare order. `alt_gold` covers legitimate alternative answers (airline name vs code).
+**Eval scoring compares result sets with tolerance.** Exact SQL matching would penalize equivalent queries. Results match when every gold column has a predicted column with the same values (1% / 0.06 tolerance, fraction-or-percent accepted). *(Superseded: the 0.06 tolerance was too lenient. See "Scorer tightened after review" below.)* Top-N questions also compare order. `alt_gold` covers legitimate alternative answers (airline name vs code).
 
 **Ambiguous questions are scored on behavior, not a single right answer.** "Which airports are worst for delays?" has no gold result. It passes if the agent answers *and* states its definition in `assumptions`.
 
