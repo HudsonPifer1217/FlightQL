@@ -1,0 +1,86 @@
+{
+  "claude-haiku-5-5:retrieved": {
+    "execution_accuracy": [
+      1.0,
+      0.0
+    ],
+    "first_try_accuracy": [
+      1.0,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      3.7919111111111112,
+      0.05353471701546517
+    ],
+    "avg_cost_usd": [
+      0.0005941777777777778,
+      8.946342103733614e-06
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      3,
+      0
+    ],
+    "n_questions": [
+      15,
+      0
+    ]
+  },
+  "claude-haiku-5-5:retrieved:nodict": {
+    "execution_accuracy": [
+      0.9230769230769231,
+      0.0
+    ],
+    "first_try_accuracy": [
+      0.9230769230769231,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      3.948733333333333,
+      0.14613757597247565
+    ],
+    "avg_cost_usd": [
+      0.0005745333333333334,
+      9.758642892898162e-06
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      3,
+      0
+    ],
+    "n_questions": [
+      15,
+      0
+    ]
+  }
+}

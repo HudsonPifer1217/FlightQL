@@ -1,0 +1,146 @@
+# FlightQL hard tier: questions designed to produce failures.
+# Each one targets a specific trap in the data or the wording, noted in `trap`.
+# Same scoring rules as questions.yaml; category "hard" is scored on execution accuracy.
+# Gold answers were checked against the full database, including how far the
+# plausible-but-wrong interpretation lands from the right one.
+
+questions:
+  - id: h01
+    category: hard
+    trap: HHMM integer times; diverted/cancelled flights have NULL arr_delayed_15
+    question: >-
+      In 2024, what share of completed flights scheduled to depart from 6:00 PM up to
+      (but not including) 9:00 PM arrived at least 15 minutes late?
+    gold: >-
+      SELECT AVG(CAST(arr_delayed_15 AS INTEGER)) FROM flights
+      WHERE year = 2024 AND sched_dep_time >= 1800 AND sched_dep_time < 2100
+      AND arr_delayed_15 IS NOT NULL
+
+  - id: h02
+    category: hard
+    trap: delay-cause columns are only filled for flights 15+ minutes late
+    question: In 2023, what percentage of all attributed delay minutes were caused by late-arriving aircraft?
+    gold: >-
+      SELECT SUM(late_aircraft_delay) / SUM(carrier_delay + weather_delay + nas_delay
+      + security_delay + late_aircraft_delay) FROM flights WHERE year = 2023 AND arr_delay >= 15
+
+  - id: h03
+    category: hard
+    trap: year-over-year comparison needs both years per airline
+    question: Which airline's average arrival delay increased the most from 2023 to 2024?
+    gold: >-
+      SELECT airline_code FROM flights WHERE year IN (2023, 2024) GROUP BY airline_code
+      HAVING COUNT(*) FILTER (WHERE year = 2023) > 0 AND COUNT(*) FILTER (WHERE year = 2024) > 0
+      ORDER BY AVG(arr_delay) FILTER (WHERE year = 2024) - AVG(arr_delay) FILTER (WHERE year = 2023) DESC
+      LIMIT 1
+    alt_gold:
+      - >-
+        SELECT a.airline_name FROM flights f JOIN airlines a ON f.airline_code = a.airline_code
+        WHERE f.year IN (2023, 2024) GROUP BY a.airline_name
+        HAVING COUNT(*) FILTER (WHERE f.year = 2023) > 0 AND COUNT(*) FILTER (WHERE f.year = 2024) > 0
+        ORDER BY AVG(f.arr_delay) FILTER (WHERE f.year = 2024) - AVG(f.arr_delay) FILTER (WHERE f.year = 2023) DESC
+        LIMIT 1
+    ordered: true
+
+  - id: h04
+    category: hard
+    trap: rank within group (window function), not a global top-N
+    question: For each year, which airport had the second-most scheduled departures?
+    gold: >-
+      SELECT year, origin FROM (SELECT year, origin, ROW_NUMBER() OVER (PARTITION BY year
+      ORDER BY COUNT(*) DESC) AS rn FROM flights GROUP BY year, origin) AS t WHERE rn = 2
+    alt_gold:
+      - >-
+        SELECT year, origin FROM (SELECT year, origin, ROW_NUMBER() OVER (PARTITION BY year
+        ORDER BY COUNT(*) DESC) AS rn FROM flights WHERE NOT cancelled GROUP BY year, origin) AS t
+        WHERE rn = 2
+
+  - id: h05
+    category: hard
+    trap: median, not mean; departure (not arrival) delay; airline by name
+    question: What was the median departure delay of Spirit Airlines flights in 2022?
+    gold: SELECT MEDIAN(dep_delay) FROM flights WHERE airline_code = 'NK' AND year = 2022
+
+  - id: h06
+    category: hard
+    trap: a city with two airports (ORD and MDW); ORD alone is 9% off
+    question: What was the average arrival delay for flights leaving Chicago in 2024?
+    gold: SELECT AVG(arr_delay) FROM flights WHERE origin IN ('ORD', 'MDW') AND year = 2024
+
+  - id: h07
+    category: hard
+    trap: misspelled airline name must map to a code
+    question: How many flights did Souhtwest have scheduled in 2023?
+    gold: SELECT COUNT(*) FROM flights WHERE airline_code = 'WN' AND year = 2023
+
+  - id: h08
+    category: unanswerable
+    trap: date outside the data's coverage; answering 0 would be wrong
+    question: How many flights were cancelled in 2019?
+
+  - id: h09
+    category: hard
+    trap: crossing midnight; dep_time=2400 and 24h+ delays break the naive dep_time < sched_dep_time (2.9% off)
+    question: How many flights in 2024 actually departed on a later calendar day than they were scheduled?
+    gold: >-
+      SELECT COUNT(*) FROM flights WHERE year = 2024 AND NOT cancelled
+      AND (sched_dep_time // 100) * 60 + sched_dep_time % 100 + dep_delay >= 1440
+
+  - id: h10
+    category: hard
+    trap: weather_delay is NULL for on-time flights, so AVG() gives 3.61 instead of 0.74
+    question: Averaged over every completed flight in 2023, how many minutes of weather delay did a flight have?
+    gold: >-
+      SELECT SUM(COALESCE(weather_delay, 0)) / COUNT(*) FROM flights
+      WHERE year = 2023 AND NOT cancelled AND NOT diverted
+
+  - id: h11
+    category: hard
+    trap: set comparison across years
+    question: What percentage of the routes (origin to destination pairs) flown in 2024 were also flown in 2020?
+    gold: >-
+      WITH r24 AS (SELECT DISTINCT origin, dest FROM flights WHERE year = 2024 AND NOT cancelled),
+      r20 AS (SELECT DISTINCT origin, dest FROM flights WHERE year = 2020 AND NOT cancelled)
+      SELECT AVG(CASE WHEN r20.origin IS NULL THEN 0.0 ELSE 1.0 END)
+      FROM r24 LEFT JOIN r20 ON r24.origin = r20.origin AND r24.dest = r20.dest
+
+  - id: h12
+    category: hard
+    trap: day_of_week is 1=Monday..7=Sunday (Saturday=6, not 7 or 0)
+    question: What was the cancellation rate for flights scheduled on Saturdays in 2022?
+    gold: SELECT AVG(CAST(cancelled AS INTEGER)) FROM flights WHERE year = 2022 AND day_of_week = 6
+
+  - id: h13
+    category: hard
+    trap: HHMM hour extraction; tiny 3 AM sample tops the literal ranking
+    question: In 2023, which scheduled departure hour had the highest share of flights leaving 15+ minutes late?
+    gold: >-
+      SELECT sched_dep_time // 100 FROM flights WHERE year = 2023 AND dep_delayed_15 IS NOT NULL
+      GROUP BY sched_dep_time // 100 ORDER BY AVG(CAST(dep_delayed_15 AS INTEGER)) DESC LIMIT 1
+    alt_gold:
+      - >-
+        SELECT sched_dep_time // 100 FROM flights WHERE year = 2023 AND dep_delayed_15 IS NOT NULL
+        GROUP BY sched_dep_time // 100 HAVING COUNT(*) >= 1000
+        ORDER BY AVG(CAST(dep_delayed_15 AS INTEGER)) DESC LIMIT 1
+      # Added after manual review: reporting the hour as its block ('2000-2059') is correct.
+      - >-
+        SELECT dep_time_block FROM flights WHERE year = 2023 AND dep_delayed_15 IS NOT NULL
+        GROUP BY dep_time_block HAVING COUNT(*) >= 1000
+        ORDER BY AVG(CAST(dep_delayed_15 AS INTEGER)) DESC LIMIT 1
+    ordered: true
+
+  - id: h14
+    category: hard
+    trap: derived metric (time recovered in the air) with a minimum-volume filter
+    question: >-
+      Among airports with at least 5,000 departures in 2024, which one had the largest
+      average departure delay minus average arrival delay for its departing flights?
+    gold: >-
+      SELECT origin FROM flights WHERE year = 2024 GROUP BY origin HAVING COUNT(*) >= 5000
+      ORDER BY AVG(dep_delay) - AVG(arr_delay) DESC LIMIT 1
+    ordered: true
+
+  - id: h15
+    category: unanswerable
+    trap: tail_number exists but aircraft model does not; tempting to group by tail number
+    question: Which aircraft model, like Boeing 737 or Airbus A320, had the most delays?

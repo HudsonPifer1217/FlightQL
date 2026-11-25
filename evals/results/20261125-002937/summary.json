@@ -1,0 +1,152 @@
+{
+  "claude-haiku-5-5:retrieved": {
+    "execution_accuracy": [
+      1.0,
+      0.0
+    ],
+    "first_try_accuracy": [
+      1.0,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "ambiguous_handled": [
+      1.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "adversarial_handled": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      2.7541764705882352,
+      0.0
+    ],
+    "avg_cost_usd": [
+      0.0004222941176470588,
+      0.0
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      1,
+      0
+    ],
+    "n_questions": [
+      34,
+      0
+    ]
+  },
+  "claude-opus-5-5:retrieved": {
+    "execution_accuracy": [
+      1.0,
+      0.0
+    ],
+    "first_try_accuracy": [
+      1.0,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "ambiguous_handled": [
+      1.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "adversarial_handled": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      3.9115882352941176,
+      0.0
+    ],
+    "avg_cost_usd": [
+      0.012842470588235294,
+      0.0
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      1,
+      0
+    ],
+    "n_questions": [
+      34,
+      0
+    ]
+  },
+  "claude-opus-5-5:full": {
+    "execution_accuracy": [
+      1.0,
+      0.0
+    ],
+    "first_try_accuracy": [
+      1.0,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "ambiguous_handled": [
+      1.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "adversarial_handled": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      3.830058823529412,
+      0.0
+    ],
+    "avg_cost_usd": [
+      0.021498470588235296,
+      0.0
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      1,
+      0
+    ],
+    "n_questions": [
+      34,
+      0
+    ]
+  }
+}

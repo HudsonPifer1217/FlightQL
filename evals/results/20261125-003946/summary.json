@@ -1,0 +1,86 @@
+{
+  "claude-opus-5-5:retrieved": {
+    "execution_accuracy": [
+      1.0,
+      0.0
+    ],
+    "first_try_accuracy": [
+      1.0,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      4.230533333333333,
+      0.0
+    ],
+    "avg_cost_usd": [
+      0.015485066666666667,
+      0.0
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      1,
+      0
+    ],
+    "n_questions": [
+      15,
+      0
+    ]
+  },
+  "claude-opus-5-5:retrieved:nodict": {
+    "execution_accuracy": [
+      0.8461538461538461,
+      0.0
+    ],
+    "first_try_accuracy": [
+      0.8461538461538461,
+      0.0
+    ],
+    "valid_first_try": [
+      1.0,
+      0.0
+    ],
+    "hallucinated_schema_rate": [
+      0.0,
+      0.0
+    ],
+    "correct_refusals": [
+      1.0,
+      0.0
+    ],
+    "avg_latency_s": [
+      4.652,
+      0.0
+    ],
+    "avg_cost_usd": [
+      0.0150648,
+      0.0
+    ],
+    "avg_attempts": [
+      1.0,
+      0.0
+    ],
+    "n_runs": [
+      1,
+      0
+    ],
+    "n_questions": [
+      15,
+      0
+    ]
+  }
+}
