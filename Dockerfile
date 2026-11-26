@@ -1,6 +1,6 @@
 # FlightQL API image.
 #   docker build -t flightql .
-#   docker run -p 8000:8000 --env-file .env -v "$(pwd)/data:/app/data" flightql
+#   docker run -p 8000:8000 --env-file .env -v "$(pwd)/data:/app/data:ro" flightql
 # The 1.5 GB database is mounted at run time, not baked into the image, and the
 # API key comes from --env-file, so neither ends up inside the image.
 FROM python:3.12-slim

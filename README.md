@@ -82,7 +82,7 @@ To run the API in Docker instead (after building the database):
 
 ```bash
 docker build -t flightql .
-docker run -p 8000:8000 --env-file .env -v "$(pwd)/data:/app/data" flightql
+docker run -p 8000:8000 --env-file .env -v "$(pwd)/data:/app/data:ro" flightql
 ```
 
 To run the tests, run `pytest`. They use a small fake database and a fake model, so there's no download and no cost.
